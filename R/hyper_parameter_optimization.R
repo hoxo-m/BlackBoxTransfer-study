@@ -6,7 +6,7 @@ hypara_optim <- function(grid_hypara, dataloader_train, dataloader_val) {
   result <- tibble()
   for (i in seq_len(nrow(grid_hypara))) {
     hyper_parameters <- grid_hypara[i, ]
-    print(hyper_parameters)
+    # print(hyper_parameters)
     best <- execute_learning(dataloader_train, dataloader_val, hyper_parameters)
     res <- tibble(hyper_parameters, loss = best$val_mse, model = list(best$model))
     result <- rbind(result, res)
