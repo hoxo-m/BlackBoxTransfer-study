@@ -1,7 +1,7 @@
 box::use(torch[tensor_dataset, torch_float, torch_tensor])
 box::use(torch[dataloader, dataset_subset])
 box::use(./hyper_parameter_optimization[hypara_optim])
-box::use(torch[with_no_grad])
+box::use(torch[with_no_grad, nnf_mse_loss])
 box::use(./learner[Learner])
 box::use(./execute_learning[execute_learning])
 
@@ -55,9 +55,12 @@ execute_proporsed_method <- function(data, params) {
   model_delta_opt <- hypara_optim(grid_hypara, dataloader_train, dataloader_val)
 
   # Estimate lambda ---------------------------------------------------------
-  learner_lambda0 <- Learner$new(model_h_opt, NULL, NULL, dataloader_val)
+  ds0 <- tensor_dataset(x, y)
+  dataset_val0 <- dataset_subset(ds0, inds[(n_train + 1):n])
+  dataloader_val0 <- dataloader(dataset_val0, batch_size = 64, shuffle = FALSE)
+  learner_lambda0 <- Learner$new(model_h_opt, NULL, NULL, dataloader_val0)
   learner_lambda1 <- Learner$new(model_delta_opt, NULL, NULL, dataloader_val)
-  
+
   df_loss <- data.frame(
     lambda = 0:1,
     loss = c(learner_lambda0$validate(), learner_lambda1$validate())
@@ -78,7 +81,7 @@ execute_proporsed_method <- function(data, params) {
   y_value <- data$D_test$Y
   y <- torch_tensor(matrix(y_value, ncol = 1), dtype = torch_float())
   
-  mse <- as.numeric(sqrt(sum((y - g(x))^2)))
+  mse <- with_no_grad(nnf_mse_loss(g(x), y)$item())
   mse
 }
 
@@ -115,6 +118,6 @@ execute_base_method <- function(data) {
   
   g <- model_base_opt
   
-  mse <- as.numeric(sqrt(sum((y - g(x))^2)))
+  mse <- with_no_grad(nnf_mse_loss(g(x), y)$item())
   mse
 }
