@@ -183,11 +183,13 @@ execute_ImpNN_method <- function(data, params) {
   # Compute MSE -------------------------------------------------------------
   g <- if (lambda_opt == 0) {
     function(x_value, x) {
-      torch_tensor(matrix(params$f(m_hat(x_value)), ncol = 1), dtype = torch_float())
+      h_hat_value <- apply(m_hat(x_value), 1, params$f)
+      torch_tensor(matrix(h_hat_value, ncol = 1), dtype = torch_float())
     }
   } else {
     function(x_value, x) {
-      torch_tensor(matrix(params$f(m_hat(x_value)), ncol = 1), dtype = torch_float()) +
+      h_hat_value <- apply(m_hat(x_value), 1, params$f)
+      torch_tensor(matrix(h_hat_value, ncol = 1), dtype = torch_float()) +
       model_delta_opt(x)
     }
   }
